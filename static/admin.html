@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hurpay IA — Administración</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
+
+        /* LOGIN */
+        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #ddeeff; }
+        .login-box { background: white; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); width: 100%; max-width: 310px; overflow: hidden; }
+        .login-header { background: #1565c0; color: white; padding: 10px 16px; font-size: 13px; font-weight: 600; }
+        .login-body { padding: 24px 20px; }
+        .login-logo { text-align: center; margin-bottom: 16px; }
+        .brand { display: inline-flex; align-items: center; gap: 4px; }
+        .brand-text { font-size: 22px; font-weight: 800; color: #1565c0; font-style: italic; }
+        .badge { background: #1565c0; color: white; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 20px; }
+        .tagline { color: #555; font-size: 11px; letter-spacing: 2px; margin-top: 4px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; margin-bottom: 4px; color: #333; font-weight: 700; font-size: 11px; letter-spacing: 1px; }
+        .form-group input, .form-group select { width: 100%; padding: 9px 12px; border: 1px solid #1565c0; border-radius: 4px; font-size: 13px; background: white; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #0d47a1; box-shadow: 0 0 0 2px rgba(21,101,192,0.15); }
+        .btn-login { width: 100%; padding: 10px; background: #1565c0; color: white; border: none; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+        .btn-login:hover { background: #0d47a1; }
+
+        /* ADMIN */
+        .admin-container { display: none; flex-direction: column; min-height: 100vh; }
+        header { background: #0052cc; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-logout { background: #cc0000; padding: 8px 15px; border: none; color: white; cursor: pointer; border-radius: 4px; font-weight: 600; }
+        .content { flex: 1; max-width: 1200px; margin: 20px auto; padding: 0 20px; width: 100%; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2 { color: #0052cc; border-bottom: 3px solid #0052cc; padding-bottom: 10px; margin-bottom: 20px; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat { background: white; padding: 15px; text-align: center; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .stat-number { font-size: 24px; font-weight: bold; color: #0052cc; }
+        .stat-label { font-size: 11px; color: #666; margin-top: 8px; }
+        .user-form { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .full { grid-column: 1 / -1; }
+        .btn-primary { background: #0052cc; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 4px; font-weight: 600; width: 100%; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #0052cc; color: white; }
+        .btn-edit { background: #0052cc; color: white; padding: 4px 10px; border: none; cursor: pointer; font-size: 12px; border-radius: 3px; margin-right: 4px; }
+        .btn-delete { background: #cc0000; color: white; padding: 4px 10px; border: none; cursor: pointer; font-size: 12px; border-radius: 3px; }
+
+        /* MODAL */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 480px; }
+        .modal-box h3 { color: #0052cc; margin-bottom: 20px; font-size: 18px; }
+        .modal-form { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .modal-btns button { flex: 1; padding: 10px; border: none; cursor: pointer; border-radius: 4px; font-weight: 600; font-size: 14px; }
+        .btn-save { background: #0052cc; color: white; }
+        .btn-cancel { background: #999; color: white; }
+        .btn-consumo { background: #28a745; color: white; padding: 4px 10px; border: none; cursor: pointer; font-size: 12px; border-radius: 3px; margin-right: 4px; }
+        .consumo-filtros { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap; }
+        .consumo-filtros input { padding: 6px 10px; border: 1px solid #1565c0; border-radius: 4px; font-size: 13px; }
+        .consumo-filtros button { padding: 6px 14px; background: #1565c0; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        .consumo-totales { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .consumo-total { background: #f0f4ff; padding: 10px; border-radius: 5px; text-align: center; }
+        .consumo-total-num { font-size: 20px; font-weight: bold; color: #0052cc; }
+        .consumo-total-label { font-size: 11px; color: #666; margin-top: 4px; }
+        .modal-consumo { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-consumo.active { display: flex; }
+        .modal-consumo-box { background: white; padding: 25px; border-radius: 10px; width: 95%; max-width: 1100px; max-height: 85vh; overflow-y: auto; }
+        .modal-consumo-box h3 { color: #0052cc; margin-bottom: 15px; }
+
+        /* CATEGORIAS */
+        .cat-lista { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .cat-tag { background: #E3F2FD; border: 1px solid #90CAF9; border-radius: 20px; padding: 5px 14px; font-size: 13px; color: #1565C0; display: flex; align-items: center; gap: 8px; }
+        .cat-tag button { background: none; border: none; color: #E53935; cursor: pointer; font-size: 15px; line-height: 1; }
+        .cat-form { display: flex; gap: 10px; margin-top: 14px; }
+        .cat-form input { flex: 1; padding: 8px 12px; border: 1px solid #1565C0; border-radius: 4px; font-size: 13px; }
+        .cat-form button { background: #1565C0; color: white; border: none; border-radius: 4px; padding: 8px 16px; cursor: pointer; font-size: 13px; }
+        .cat-form button:hover { background: #1976D2; }
+        .cat-usuario-sel { margin-bottom: 14px; }
+        .cat-usuario-sel select { padding: 8px 12px; border: 1px solid #1565C0; border-radius: 4px; font-size: 13px; width: 100%; }
+    </style>
+</head>
+<body>
+
+<div id="loginScreen" class="login-container">
+    <div class="login-box">
+        <div class="login-header">Acceso al Sistema</div>
+        <div class="login-body">
+            <div class="login-logo">
+                <div class="brand">
+                    <span class="brand-text">Hurpay</span>
+                    <span class="badge">IA</span>
+                </div>
+                <div class="tagline">Administración de Usuarios</div>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>USUARIO</label>
+                    <input type="text" id="usuario" placeholder="Código de usuario">
+                </div>
+                <div class="form-group">
+                    <label>CONTRASEÑA</label>
+                    <input type="password" id="password" placeholder="Contraseña">
+                </div>
+                <button type="submit" class="btn-login">→ Ingresar</button>
+                <div id="loginError" style="color:#cc0000; font-size:12px; margin-top:8px; text-align:center;"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="adminScreen" class="admin-container">
+    <header>
+        <h1>Hurpay IA — Administración</h1>
+        <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+    </header>
+    <div class="content">
+        <div class="stats">
+            <div class="stat"><div class="stat-number" id="total">0</div><div class="stat-label">TOTAL</div></div>
+            <div class="stat"><div class="stat-number" id="activos">0</div><div class="stat-label">ACTIVOS</div></div>
+            <div class="stat"><div class="stat-number" id="inactivos">0</div><div class="stat-label">INACTIVOS</div></div>
+            <div class="stat"><div class="stat-number" id="admins">0</div><div class="stat-label">ADMIN</div></div>
+        </div>
+
+        <div class="section">
+            <h2>Nuevo usuario</h2>
+            <div class="user-form">
+                <div class="form-group"><label>Código</label><input type="text" id="nusuario" placeholder="CS00001"></div>
+                <div class="form-group"><label>Nombre</label><input type="text" id="nnombre" placeholder="Juan Pérez"></div>
+                <div class="form-group"><label>Password</label><input type="password" id="npassword" placeholder="••••••••"></div>
+                <div class="form-group"><label>Servidor BD</label><input type="text" id="nservidor" placeholder="p1426.use1..."></div>
+                <div class="form-group"><label>Base Datos</label><input type="text" id="nbd" placeholder="javierd2_CapitalSoft"></div>
+                <div class="form-group"><label>API URL</label><input type="text" id="napi" placeholder="https://hurpayai.ximery.com/api"></div>
+                <div class="form-group"><label>Usuario BD</label><input type="text" id="nusuario_bd" placeholder="javierd2_capitalsoftia"></div>
+                <div class="form-group"><label>Password BD</label><input type="password" id="npassword_bd" placeholder="••••••••"></div>
+                <div class="form-group"><label>Situación</label><select id="nsituacion"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></div>
+                <div class="form-group"><label>Rol</label><select id="nrol"><option value="usuario">Usuario</option><option value="administrador">Administrador</option></select></div>
+                <button class="btn-primary full" onclick="createUser()">Crear usuario</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Usuarios registrados</h2>
+            <table>
+                <thead><tr><th>CÓDIGO</th><th>NOMBRE</th><th>SERVIDOR BD</th><th>BASE DE DATOS</th><th>API URL</th><th>SITUACIÓN</th><th>ROL</th><th>ACCIONES</th></tr></thead>
+                <tbody id="tabla"><tr><td colspan="8" style="text-align:center">Cargando...</td></tr></tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Categorias de Prompts por Usuario</h2>
+            <div class="cat-usuario-sel">
+                <select id="cat-usuario-select" onchange="cargarCategorias()">
+                    <option value="">Selecciona un usuario...</option>
+                </select>
+            </div>
+            <div id="cat-lista" class="cat-lista"></div>
+            <div class="cat-form">
+                <input type="text" id="cat-nueva" placeholder="Nueva categoria (ej: Nomina)">
+                <button onclick="crearCategoria()">+ Agregar</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="editModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3>Editar usuario</h3>
+        <div class="modal-form">
+            <div class="form-group"><label>Código</label><input type="text" id="eusuario" disabled></div>
+            <div class="form-group"><label>Nombre</label><input type="text" id="enombre"></div>
+            <div class="form-group"><label>Password (dejar vacío para no cambiar)</label><input type="password" id="epassword" placeholder="••••••••"></div>
+            <div class="form-group"><label>Servidor BD</label><input type="text" id="eservidor"></div>
+            <div class="form-group"><label>Base Datos</label><input type="text" id="ebd"></div>
+            <div class="form-group"><label>API URL</label><input type="text" id="eapi"></div>
+            <div class="form-group"><label>Usuario BD</label><input type="text" id="eusuario_bd" placeholder="javierd2_capitalsoftia"></div>
+            <div class="form-group"><label>Password BD (dejar vacío para no cambiar)</label><input type="password" id="epassword_bd" placeholder="••••••••"></div>
+            <div class="form-group"><label>Situación</label><select id="esituacion"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></div>
+            <div class="form-group"><label>Rol</label><select id="erol"><option value="usuario">Usuario</option><option value="administrador">Administrador</option></select></div>
+        </div>
+        <div class="modal-btns">
+            <button class="btn-save" onclick="saveUser()">Guardar cambios</button>
+            <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API = 'http://143.198.125.134:8000';
+    let token = null;
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const res = await fetch(API + '/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario: document.getElementById('usuario').value, password: document.getElementById('password').value })
+        });
+        const data = await res.json();
+        if (res.ok === false || data.rol !== 'administrador') {
+            document.getElementById('loginError').textContent = 'Acceso denegado. Solo administradores pueden ingresar.';
+            return;
+        }
+        token = data.token;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminScreen').style.display = 'flex';
+        loadUsers();
+        cargarUsuariosEnSelect();
+    });
+
+    async function loadUsers() {
+        const res = await fetch(API + '/admin/usuarios', { headers: { 'Authorization': 'Bearer ' + token } });
+        const users = await res.json();
+        const tbody = document.getElementById('tabla');
+        tbody.innerHTML = '';
+        users.forEach(function(u) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td>' + u.usuario + '</td><td>' + u.nombre_usuario + '</td><td>' + u.servidor_bd + '</td><td>' + u.base_datos + '</td><td>' + u.api_url + '</td><td><span style="background:#90EE90;padding:2px 6px;border-radius:3px">' + u.situacion + '</span></td><td>' + u.rol + '</td><td><button class="btn-edit" onclick="openEdit(\'' + u.usuario + '\',\'' + u.nombre_usuario + '\',\'' + u.servidor_bd + '\',\'' + u.base_datos + '\',\'' + u.api_url + '\',\'' + u.situacion + '\',\'' + u.rol + '\',\'' + (u.usuario_bd||'') + '\')">Editar</button><button class="btn-delete" onclick="deleteUser(\'' + u.usuario + '\')">Eliminar</button><button class="btn-consumo" onclick="verConsumo(\'' + u.usuario + '\')">Consumo</button></td>';
+            tbody.appendChild(tr);
+        });
+        document.getElementById('total').textContent = users.length;
+        document.getElementById('activos').textContent = users.filter(function(u){ return u.situacion === 'activo'; }).length;
+        document.getElementById('inactivos').textContent = users.filter(function(u){ return u.situacion === 'inactivo'; }).length;
+        document.getElementById('admins').textContent = users.filter(function(u){ return u.rol === 'administrador'; }).length;
+    }
+
+    function openEdit(u, n, s, b, a, sit, r, ubd) {
+        document.getElementById('eusuario').value = u;
+        document.getElementById('enombre').value = n;
+        document.getElementById('epassword').value = '';
+        document.getElementById('eservidor').value = s;
+        document.getElementById('ebd').value = b;
+        document.getElementById('eapi').value = a;
+        document.getElementById('esituacion').value = sit;
+        document.getElementById('erol').value = r;
+        document.getElementById('eusuario_bd').value = ubd || '';
+        document.getElementById('epassword_bd').value = '';
+        document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('editModal').classList.remove('active');
+    }
+
+    async function saveUser() {
+        const u = document.getElementById('eusuario').value;
+        const payload = {
+            usuario: u,
+            nombre_usuario: document.getElementById('enombre').value,
+            password: document.getElementById('epassword').value,
+            servidor_bd: document.getElementById('eservidor').value,
+            base_datos: document.getElementById('ebd').value,
+            api_url: document.getElementById('eapi').value,
+            usuario_bd: document.getElementById('eusuario_bd').value,
+            password_bd: document.getElementById('epassword_bd').value,
+            situacion: document.getElementById('esituacion').value.toLowerCase(),
+            rol: document.getElementById('erol').value.toLowerCase()
+        };
+        try {
+            const res = await fetch(API + '/admin/usuarios/' + u, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(JSON.stringify(data));
+            closeModal();
+            loadUsers();
+        } catch(e) { console.error('Error saveUser:', e); }
+    }
+
+    async function deleteUser(u) {
+        if (confirm('¿Eliminar usuario ' + u + '?')) {
+            try {
+                const res = await fetch(API + '/admin/usuarios/' + u, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!res.ok) throw new Error('Error al eliminar');
+                loadUsers();
+            } catch(e) { console.error(e); }
+        }
+    }
+
+    async function createUser() {
+        const cod = document.getElementById('nusuario').value;
+        const nom = document.getElementById('nnombre').value;
+        const pwd = document.getElementById('npassword').value;
+        const srv = document.getElementById('nservidor').value;
+        const bd  = document.getElementById('nbd').value;
+        const api = document.getElementById('napi').value;
+        const ubd = document.getElementById('nusuario_bd').value;
+        const pbd = document.getElementById('npassword_bd').value;
+        const sit = document.getElementById('nsituacion').value;
+        const rol = document.getElementById('nrol').value;
+        if (!cod || !nom || !pwd) { return; }
+        try {
+            const res = await fetch(API + '/admin/usuarios', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ usuario: cod, nombre_usuario: nom, password: pwd, servidor_bd: srv, base_datos: bd, api_url: api, usuario_bd: ubd, password_bd: pbd, situacion: sit.toLowerCase(), rol: rol.toLowerCase() })
+            });
+            if (!res.ok) throw new Error('Error al crear');
+            document.getElementById('nusuario').value = '';
+            document.getElementById('nnombre').value = '';
+            document.getElementById('npassword').value = '';
+            document.getElementById('nservidor').value = '';
+            document.getElementById('nbd').value = '';
+            document.getElementById('napi').value = '';
+            document.getElementById('nusuario_bd').value = '';
+            document.getElementById('npassword_bd').value = '';
+            loadUsers();
+        } catch(e) { console.error(e); }
+    }
+
+    let usuarioConsumo = null;
+
+    async function verConsumo(usuario) {
+        usuarioConsumo = usuario;
+        document.getElementById('consumoTitulo').textContent = 'Consumo — ' + usuario;
+        document.getElementById('modalConsumo').classList.add('active');
+        cargarConsumo();
+    }
+
+    async function cargarConsumo() {
+        const desde = document.getElementById('fechaDesde').value;
+        const hasta = document.getElementById('fechaHasta').value;
+        let url = API + '/admin/consumo/' + usuarioConsumo;
+        const params = [];
+        if (desde) params.push('fecha_desde=' + desde);
+        if (hasta) params.push('fecha_hasta=' + hasta);
+        if (params.length) url += '?' + params.join('&');
+        try {
+            const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+            const data = await res.json();
+            document.getElementById('totalConsultas').textContent = data.total_consultas;
+            document.getElementById('totalTokens').textContent = data.total_input_tokens.toLocaleString();
+            document.getElementById('totalCosto').textContent = '$' + data.total_costo_usd.toFixed(4);
+            const tbody = document.getElementById('consumoTable');
+            tbody.innerHTML = '';
+            if (data.consultas.length > 0) {
+                data.consultas.forEach(c => {
+                    tbody.innerHTML += '<tr><td>' + c.fecha + '</td><td>' + c.hora + '</td><td>' + c.modelo + '</td><td>' + c.input_tokens + '</td><td>' + c.cache_read_tokens + '</td><td>' + c.cache_write_tokens_5m + '</td><td>' + c.cache_write_tokens_1h + '</td><td>' + c.output_tokens + '</td><td>$' + (c.costo_usd||0).toFixed(4) + '</td><td>' + (c.pregunta||'').substring(0,500) + '</td></tr>';
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center">Sin consultas</td></tr>';
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    function cerrarConsumo() {
+        document.getElementById('modalConsumo').classList.remove('active');
+        usuarioConsumo = null;
+    }
+
+    function logout() {
+        token = null;
+        document.getElementById('adminScreen').style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('loginForm').reset();
+    }
+
+    /* ── Categorias de Prompts ────────────────────────────── */
+    async function cargarUsuariosEnSelect() {
+        try {
+            const res = await fetch(API + '/admin/usuarios', { headers: { 'Authorization': 'Bearer ' + token } });
+            const data = await res.json();
+            const sel = document.getElementById('cat-usuario-select');
+            sel.innerHTML = '<option value="">Selecciona un usuario...</option>';
+            (Array.isArray(data) ? data : []).forEach(u => {
+                sel.innerHTML += '<option value="' + u.usuario + '">' + u.usuario + ' - ' + u.nombre_usuario + '</option>';
+            });
+        } catch(e) {}
+    }
+
+    async function cargarCategorias() {
+        const usuario = document.getElementById('cat-usuario-select').value;
+        const lista = document.getElementById('cat-lista');
+        if (usuario === '') { lista.innerHTML = ''; return; }
+        try {
+            const res = await fetch(API + '/admin/get-categorias?usuario=' + usuario, { headers: { 'Authorization': 'Bearer ' + token } });
+            const data = await res.json();
+            if (data.categorias.length === 0) {
+                lista.innerHTML = '<span style="color:#888;font-size:13px">Sin categorias asignadas.</span>';
+                return;
+            }
+            lista.innerHTML = data.categorias.map(c =>
+                '<div class="cat-tag">' + c.nombre_categoria +
+                '<button onclick="eliminarCategoria(' + c.id + ')" title="Eliminar">x</button></div>'
+            ).join('');
+        } catch(e) {}
+    }
+
+    async function crearCategoria() {
+        const usuario = document.getElementById('cat-usuario-select').value;
+        const nombre = document.getElementById('cat-nueva').value.trim();
+        try {
+            const res = await fetch(API + '/admin/add-categoria?usuario=' + usuario, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuario: usuario, nombre_categoria: nombre })
+            });
+            if (res.ok) {
+                document.getElementById('cat-nueva').value = '';
+                await cargarCategorias();
+            }
+        } catch(e) {}
+    }
+
+    async function eliminarCategoria(id) {
+        if (confirm('Eliminar esta categoria?') === false) return;
+        try {
+            const res = await fetch(API + '/admin/del-categoria/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+            if (res.ok === false) {
+                alert(data.detail || 'No se puede eliminar.');
+                return;
+            }
+            await cargarCategorias();
+        } catch(e) {}
+    }
+</script>
+<div id="modalConsumo" class="modal-consumo">
+    <div class="modal-consumo-box">
+        <h3 id="consumoTitulo">Consumo de usuario</h3>
+        <div class="consumo-filtros">
+            <label>Desde:</label><input type="date" id="fechaDesde">
+            <label>Hasta:</label><input type="date" id="fechaHasta">
+            <button onclick="cargarConsumo()">Filtrar</button>
+            <button style="background:#999" onclick="cerrarConsumo()">Cerrar</button>
+        </div>
+        <div class="consumo-totales">
+            <div class="consumo-total"><div class="consumo-total-num" id="totalConsultas">0</div><div class="consumo-total-label">CONSULTAS</div></div>
+            <div class="consumo-total"><div class="consumo-total-num" id="totalTokens">0</div><div class="consumo-total-label">TOKENS INPUT</div></div>
+            <div class="consumo-total"><div class="consumo-total-num" id="totalCosto">$0.00</div><div class="consumo-total-label">COSTO USD</div></div>
+        </div>
+        <table>
+            <thead><tr><th>FECHA</th><th>HORA</th><th>MODELO</th><th>INPUT</th><th>CACHE READ</th><th>CACHE 5m</th><th>CACHE 1h</th><th>OUTPUT</th><th>COSTO USD</th><th>PREGUNTA</th></tr></thead>
+            <tbody id="consumoTable"><tr><td colspan="10" style="text-align:center">Sin datos</td></tr></tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hurpay IA — ChatBox</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Arial, sans-serif; background: #E3F2FD; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+/* ── NAVBAR HURPAY ── */
+#navbar {
+  width: 100%; background: #1565C0; color: white;
+  padding: 0 16px; height: 36px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: fixed; top: 0; left: 0; z-index: 100;
+}
+#navbar .logo { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+#navbar .logo-ia { background: white; color: #1565C0; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 8px; letter-spacing: 1px; }
+#navbar .logo-icon { width: 22px; height: 22px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+#navbar .logo-icon svg { width: 14px; height: 14px; }
+#navbar .nav-right { display: flex; align-items: center; gap: 12px; font-size: 11px; }
+#navbar .nav-empresa { color: #90CAF9; font-size: 10px; }
+#navbar .nav-user { display: flex; align-items: center; gap: 6px; }
+#navbar .nav-avatar { width: 22px; height: 22px; background: #0D47A1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; }
+
+/* ── TOPBAR AZUL SECUNDARIO ── */
+#topbar {
+  width: 100%; background: #1976D2; color: #E3F2FD;
+  padding: 0 16px; height: 26px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: fixed; top: 36px; left: 0; z-index: 99; font-size: 10px;
+}
+#topbar-db { color: #90CAF9; font-size: 10px; }
+
+/* ── LOGIN SCREEN ── */
+#login-screen {
+  background: white; width: 340px;
+  border: 1px solid #BBDEFB; border-radius: 4px;
+  overflow: hidden; margin-top: 62px;
+}
+#login-header {
+  background: #1565C0; color: white;
+  padding: 10px 16px; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; gap: 8px;
+}
+#login-body { padding: 24px 20px; }
+#login-logo { text-align: center; margin-bottom: 20px; }
+#login-logo .brand { font-size: 26px; font-weight: 900; color: #1565C0; letter-spacing: -0.5px; }
+#login-logo .brand-ia { background: #1565C0; color: white; font-size: 10px; font-weight: 800; padding: 1px 7px; border-radius: 10px; letter-spacing: 1px; vertical-align: middle; margin-left: 4px; }
+#login-logo .tagline { font-size: 11px; color: #6B8099; letter-spacing: 2px; margin-top: 2px; }
+.input-group { margin-bottom: 12px; }
+.input-group label { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #6B8099; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.input-group input {
+  width: 100%; padding: 7px 10px;
+  border: 1px solid #BBDEFB; border-radius: 3px;
+  font-size: 12px; outline: none; color: #333;
+  transition: border-color 0.2s; font-family: Arial, sans-serif;
+}
+.input-group input:focus { border-color: #1565C0; border-width: 1.5px; }
+.btn-login {
+  width: 100%; padding: 9px; background: #1565C0; color: white;
+  border: none; border-radius: 3px; font-size: 12px; font-weight: 700;
+  cursor: pointer; margin-top: 6px; font-family: Arial, sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  letter-spacing: 0.3px;
+}
+.btn-login:hover { background: #1976D2; }
+#error-msg { color: #C62828; font-size: 11px; margin-top: 10px; display: none; background: #FFEBEE; padding: 6px 10px; border-radius: 3px; border-left: 3px solid #C62828; }
+
+/* ── CHAT SCREEN ── */
+#chat-screen {
+  display: none; width: 100%; max-width: 980px;
+  height: calc(100vh - 62px); margin-top: 62px;
+  background: white; flex-direction: column;
+  border-left: 1px solid #BBDEFB; border-right: 1px solid #BBDEFB;
+}
+
+/* CHAT HEADER */
+#chat-header {
+  background: #1565C0; color: white;
+  padding: 6px 14px; display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 2px solid #0D47A1;
+}
+#chat-header-title { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+#chat-header h2 { font-size: 12px; }
+#btn-logout {
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+  color: white; padding: 4px 12px; border-radius: 3px; cursor: pointer; font-size: 10px;
+  font-family: Arial, sans-serif;
+}
+#btn-logout:hover { background: rgba(255,255,255,0.25); }
+
+/* MENSAJES */
+#mensajes { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; background: #FAFBFD; }
+.msg { max-width: 82%; padding: 9px 13px; font-size: 12px; line-height: 1.6; border-radius: 3px; }
+.msg.usuario { background: #1565C0; color: white; align-self: flex-end; }
+.msg.bot { background: white; color: #333; align-self: flex-start; border: 1px solid #DDEAF6; border-left: 3px solid #1565C0; width: 82%; }
+.msg.cargando { color: #6B8099; font-style: italic; border-left: 3px solid #90CAF9; }
+
+/* SQL y código */
+.msg.bot pre { background: #0D1B3E; color: #90CAF9; padding: 10px; border-radius: 3px; overflow-x: auto; font-size: 11px; margin: 8px 0; font-family: 'Courier New', monospace; }
+.msg.bot code { background: #E3F2FD; color: #1565C0; padding: 1px 5px; border-radius: 2px; font-size: 11px; font-family: 'Courier New', monospace; }
+
+/* TABLA */
+.tabla-resultados { margin-top: 10px; overflow-x: auto; }
+.tabla-resultados table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.tabla-resultados th { background: #1565C0; color: white; padding: 5px 9px; text-align: left; font-weight: 700; white-space: nowrap; font-size: 10px; }
+.tabla-resultados td { padding: 5px 9px; border-bottom: 1px solid #EAF0F8; white-space: nowrap; color: #333; }
+.tabla-resultados tr:nth-child(even) td { background: #F0F7FF; }
+.tabla-resultados tr:hover td { background: #DDEAF6; }
+.tabla-info { font-size: 10px; color: #6B8099; margin-top: 5px; text-align: right; }
+.tabla-error { background: #FFEBEE; color: #C62828; padding: 7px 11px; border-radius: 3px; font-size: 12px; margin-top: 8px; border-left: 3px solid #C62828; }
+
+/* ── DESCARGA — aviso cuando hay más de 20 filas ── */
+.descarga-aviso {
+  margin-top: 10px;
+  background: #FFF8E1;
+  border: 1px solid #FFE082;
+  border-left: 3px solid #F9A825;
+  border-radius: 3px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: #5D4037;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.descarga-aviso span { flex: 1; }
+.descarga-btns { display: flex; gap: 6px; }
+.btn-descarga-si {
+  background: #1565C0; color: white;
+  border: none; border-radius: 3px;
+  padding: 4px 14px; font-size: 11px; font-weight: 700;
+  cursor: pointer; font-family: Arial, sans-serif;
+}
+.btn-descarga-si:hover { background: #1976D2; }
+.btn-descarga-no {
+  background: white; color: #6B8099;
+  border: 1px solid #CFD8DC; border-radius: 3px;
+  padding: 4px 14px; font-size: 11px;
+  cursor: pointer; font-family: Arial, sans-serif;
+}
+.btn-descarga-no:hover { background: #F5F5F5; }
+
+/* PREGUNTAS RÁPIDAS */
+#preguntas-rapidas {
+  padding: 7px 14px; display: flex; gap: 6px; flex-wrap: wrap;
+  border-top: 1px solid #DDEAF6; background: #F5F8FC;
+}
+#pq-label { font-size: 10px; color: #6B8099; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; width: 100%; margin-bottom: 2px; }
+.btn-rapida {
+  background: white; color: #1565C0;
+  border: 1px solid #BBDEFB; padding: 4px 11px;
+  border-radius: 3px; font-size: 11px; cursor: pointer;
+  transition: background 0.15s; font-family: Arial, sans-serif;
+}
+.btn-rapida:hover { background: #E3F2FD; border-color: #1565C0; }
+
+/* ── INPUT AREA MEJORADA ── */
+#input-area {
+  padding: 10px 14px;
+  border-top: 1px solid #DDEAF6;
+  background: white;
+}
+
+/* Fila de opciones: selector de límite + contador */
+#input-opciones {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+#limite-label {
+  font-size: 10px; color: #6B8099; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.4px;
+  display: flex; align-items: center; gap: 6px;
+}
+#selector-limite {
+  display: flex; gap: 4px;
+}
+.btn-limite {
+  padding: 2px 10px;
+  border: 1px solid #BBDEFB;
+  border-radius: 10px;
+  font-size: 10px; font-weight: 700;
+  cursor: pointer; background: white; color: #6B8099;
+  font-family: Arial, sans-serif;
+  transition: all 0.15s;
+}
+.btn-limite.activo {
+  background: #1565C0; color: white; border-color: #1565C0;
+}
+.btn-limite:hover:not(.activo) { background: #E3F2FD; color: #1565C0; border-color: #90CAF9; }
+
+#contador-chars {
+  font-size: 10px; font-weight: 700;
+  color: #6B8099;
+  transition: color 0.2s;
+}
+#contador-chars.advertencia { color: #F57F17; }
+#contador-chars.excedido    { color: #C62828; }
+
+/* Fila del textarea + botón */
+#input-fila {
+  display: flex; gap: 8px; align-items: flex-end;
+}
+#input-msg {
+  flex: 1;
+  padding: 8px 13px;
+  border: 1px solid #BBDEFB; border-radius: 3px;
+  font-size: 12px; outline: none;
+  font-family: Arial, sans-serif; color: #333;
+  transition: border-color 0.2s;
+  resize: none;
+  min-height: 36px; max-height: 90px;
+  overflow-y: auto;
+  line-height: 1.5;
+}
+#input-msg:focus { border-color: #1565C0; border-width: 1.5px; }
+#input-msg.excedido { border-color: #C62828; border-width: 1.5px; }
+
+#btn-enviar {
+  background: #1565C0; color: white; border: none;
+  padding: 8px 20px; border-radius: 3px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  font-family: Arial, sans-serif; white-space: nowrap;
+  transition: background 0.15s; height: 36px;
+}
+#btn-enviar:hover { background: #1976D2; }
+#btn-enviar:disabled { background: #90CAF9; cursor: not-allowed; }
+
+#msg-limite-error {
+  font-size: 10px; color: #C62828;
+  margin-top: 4px; display: none;
+}
+
+/* ── BOTÓN VER PDF ── */
+.btn-ver-pdf {
+  background: #1565C0; color: white;
+  border: none; border-radius: 3px;
+  padding: 3px 10px; font-size: 10px; font-weight: 700;
+  cursor: pointer; font-family: Arial, sans-serif;
+  white-space: nowrap; transition: background 0.15s;
+}
+.btn-ver-pdf:hover { background: #1976D2; }
+.btn-ver-pdf:disabled { background: #90CAF9; cursor: not-allowed; }
+
+.pdf-spinner {
+  display: inline-block; width: 10px; height: 10px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: white; border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle; margin-right: 3px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.pdf-error {
+  font-size: 10px; color: #C62828;
+  background: #FFEBEE; padding: 3px 8px;
+  border-radius: 3px; display: inline-block; margin-top: 2px;
+}
+
+/* ── Prompts Favoritos ────────────────────────────────── */
+#btn-prompts {
+  background: #1565C0; color: #fff; border: none; border-radius: 6px;
+  padding: 7px 14px; cursor: pointer; font-size: 13px; margin-right: 8px;
+}
+#btn-prompts:hover { background: #1976D2; }
+
+#panel-prompts {
+  display: none; position: fixed; top: 0; right: 0; width: 360px; height: 100%;
+  background: #fff; box-shadow: -3px 0 12px rgba(0,0,0,0.15);
+  z-index: 1000; flex-direction: column; overflow: hidden;
+}
+#panel-prompts.abierto { display: flex; }
+
+#panel-prompts-header {
+  background: #1565C0; color: #fff; padding: 14px 16px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+#panel-prompts-header h3 { margin: 0; font-size: 15px; }
+#btn-cerrar-prompts { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; }
+
+#panel-prompts-filtros { padding: 12px 14px; border-bottom: 1px solid #E0E0E0; display: flex; flex-direction: column; gap: 8px; }
+#panel-prompts-filtros select, #panel-prompts-filtros input {
+  width: 100%; padding: 7px 10px; border: 1px solid #BDBDBD;
+  border-radius: 6px; font-size: 13px; box-sizing: border-box;
+}
+#btn-buscar-prompts {
+  background: #1565C0; color: #fff; border: none; border-radius: 6px;
+  padding: 7px; cursor: pointer; font-size: 13px;
+}
+#btn-buscar-prompts:hover { background: #1976D2; }
+
+#lista-prompts { flex: 1; overflow-y: auto; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; }
+
+.prompt-item {
+  border: 1px solid #E0E0E0; border-radius: 8px; padding: 10px 12px;
+  cursor: pointer; transition: background 0.15s;
+}
+.prompt-item:hover { background: #E3F2FD; border-color: #90CAF9; }
+.prompt-item-nombre { font-weight: 600; font-size: 13px; color: #1565C0; }
+.prompt-item-cat { font-size: 11px; color: #888; margin-top: 2px; }
+.prompt-item-acciones { display: flex; gap: 6px; margin-top: 8px; }
+.prompt-item-acciones button {
+  font-size: 11px; padding: 3px 10px; border-radius: 4px; cursor: pointer; border: 1px solid #BDBDBD;
+}
+.btn-usar-prompt:hover { background: #1976D2; }
+.btn-eliminar-prompt:hover { background: #FFEBEE; }
+
+/* Modal guardar prompt */
+#modal-guardar-prompt {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4); z-index: 2000; align-items: center; justify-content: center;
+}
+#modal-guardar-prompt.abierto { display: flex; }
+#modal-guardar-cuerpo {
+  background: #fff; border-radius: 10px; padding: 24px; width: 380px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18); display: flex; flex-direction: column; gap: 12px;
+}
+#modal-guardar-cuerpo h3 { margin: 0; font-size: 15px; color: #1565C0; }
+#modal-guardar-cuerpo input, #modal-guardar-cuerpo select, #modal-guardar-cuerpo textarea {
+  width: 100%; padding: 8px 10px; border: 1px solid #BDBDBD;
+  border-radius: 6px; font-size: 13px; box-sizing: border-box;
+}
+#modal-guardar-cuerpo textarea { resize: vertical; min-height: 80px; }
+#modal-guardar-btns { display: flex; gap: 8px; justify-content: flex-end; }
+#modal-guardar-btns button {
+  padding: 7px 18px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none;
+}
+#btn-confirmar-guardar { background: #1565C0; color: #fff; }
+#btn-confirmar-guardar:hover { background: #1976D2; }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div id="navbar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="#1565C0"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    </div>
+    Hurpay <span class="logo-ia">IA</span>
+  </div>
+  <div class="nav-right">
+    <span class="nav-empresa" id="nav-empresa" style="display:none"></span>
+    <div class="nav-user">
+      <div class="nav-avatar" id="nav-avatar" style="display:none"></div>
+      <span id="nav-nombre" style="font-size:10px;display:none"></span>
+    </div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <span>ChatBox — Asistente de Nómina Inteligente</span>
+  <span id="topbar-db"></span>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div id="login-header">
+    Acceso al Sistema
+  </div>
+  <div id="login-body">
+    <div id="login-logo">
+      <div class="brand">Hurpay<span class="brand-ia">IA</span></div>
+      <div class="tagline">Asistente de Nómina</div>
+    </div>
+    <div class="input-group">
+      <label>Usuario</label>
+      <input type="text" id="usuario" placeholder="Código de usuario" onkeypress="if(event.key==='Enter') login()">
+    </div>
+    <div class="input-group">
+      <label>Contraseña</label>
+      <input type="password" id="password" placeholder="Contraseña" onkeypress="if(event.key==='Enter') login()">
+    </div>
+    <button class="btn-login" onclick="login()">&#x2192; Ingresar</button>
+    <div id="error-msg">Usuario o contraseña incorrectos</div>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div id="chat-screen">
+  <div id="chat-header">
+    <div id="chat-header-title">
+      <h2>Hurpay IA — Asistente de Planillas</h2>
+    </div>
+    <button id="btn-prompts" onclick="abrirPanelPrompts()">★ Mis Prompts</button><button id="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+  <div id="mensajes"></div>
+  <div id="preguntas-rapidas">
+    <div id="pq-label">Consultas rápidas</div>
+    <button class="btn-rapida" onclick="preguntaRapida('¿Cuántos trabajadores activos hay?')">Trabajadores activos</button>
+    <button class="btn-rapida" onclick="preguntaRapida('¿Cómo registro un empleado nuevo?')">Registrar empleado</button>
+    <button class="btn-rapida" onclick="preguntaRapida('¿Cómo proceso la planilla mensual?')">Procesar planilla</button>
+    <button class="btn-rapida" onclick="preguntaRapida('Muéstrame los últimos períodos de nómina')">Períodos de nómina</button>
+    <button class="btn-rapida" onclick="preguntaRapida('¿Cómo genero boletas de pago?')">Generar boletas</button>
+  </div>
+
+  <!-- INPUT AREA -->
+  <div id="input-area">
+    <!-- Fila superior: selector de límite + contador -->
+    <div id="input-opciones">
+      <div id="limite-label">
+        Límite de consulta:
+        <div id="selector-limite">
+          <button class="btn-limite" data-chars="160" onclick="setLimite(160)">160</button>
+          <button class="btn-limite activo" data-chars="500" onclick="setLimite(500)">500 ✓</button>
+          <button class="btn-limite" data-chars="1000" onclick="setLimite(1000)">1000</button>
+        </div>
+      </div>
+      <span id="contador-chars">0 / 500</span>
+    </div>
+    <!-- Fila inferior: textarea + botón enviar -->
+    <div id="input-fila">
+      <textarea
+        id="input-msg"
+        placeholder="Escribe tu pregunta sobre planillas o datos..."
+        rows="1"
+        oninput="onInputChange()"
+        onkeypress="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); enviar(); }"
+      ></textarea>
+      <button id="btn-enviar" onclick="enviar()">Enviar</button>
+    </div>
+    <div id="msg-limite-error">⚠ Has superado el límite de caracteres. Reduce tu consulta para poder enviar.</div>
+  </div>
+</div>
+
+<div id="panel-prompts">
+  <div id="panel-prompts-header">
+    <h3>★ Mis Prompts</h3>
+    <button id="btn-cerrar-prompts" onclick="cerrarPanelPrompts()">✕</button>
+  </div>
+  <div id="panel-prompts-filtros">
+    <select id="filtro-categoria">
+      <option value="">Todas las categorias</option>
+    </select>
+    <input type="text" id="filtro-nombre" placeholder="Buscar por nombre..." oninput="buscarPrompts()">
+    <button id="btn-buscar-prompts" onclick="buscarPrompts()">Buscar</button>
+  </div>
+  <div id="lista-prompts"></div>
+</div>
+
+<div id="modal-guardar-prompt">
+  <div id="modal-guardar-cuerpo">
+    <h3>★ Guardar Prompt</h3>
+    <input type="text" id="guardar-nombre" placeholder="Nombre del prompt (ej: Liquidacion CTS Lima)">
+    <select id="guardar-categoria"></select>
+    <textarea id="guardar-texto" placeholder="Texto del prompt..."></textarea>
+    <div id="modal-guardar-btns">
+      <button id="btn-cancelar-guardar" onclick="cerrarModalGuardar()">Cancelar</button>
+      <button id="btn-confirmar-guardar" onclick="confirmarGuardarPrompt()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let token = "";
+let historial = [];
+let limiteActual = 500;  // límite por defecto
+
+/* ── Selector de límite de prompt ── */
+function setLimite(chars) {
+  limiteActual = chars;
+  // Actualizar botones visuales
+  document.querySelectorAll(".btn-limite").forEach(btn => {
+    const btnChars = parseInt(btn.dataset.chars);
+    const esActivo = btnChars === chars;
+    btn.classList.toggle("activo", esActivo);
+    btn.textContent = esActivo ? btnChars + " ✓" : btnChars;
+  });
+  // Refrescar contador
+  onInputChange();
+}
+
+function onInputChange() {
+  const input = document.getElementById("input-msg");
+  const contador = document.getElementById("contador-chars");
+  const errorMsg = document.getElementById("msg-limite-error");
+  const len = input.value.length;
+  const pct = len / limiteActual;
+
+  contador.textContent = `${len} / ${limiteActual}`;
+  contador.classList.remove("advertencia", "excedido");
+  input.classList.remove("excedido");
+  errorMsg.style.display = "none";
+
+  if (pct >= 1) {
+    contador.classList.add("excedido");
+    input.classList.add("excedido");
+    errorMsg.style.display = "block";
+  } else if (pct >= 0.85) {
+    contador.classList.add("advertencia");
+  }
+
+  // Ajustar altura del textarea automáticamente
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 90) + "px";
+}
+
+/* ── Login / Logout ── */
+async function login() {
+  const usuario = document.getElementById("usuario").value.trim();
+  const password = document.getElementById("password").value.trim();
+  if (!usuario || !password) return;
+  try {
+    const res = await fetch("/login", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({usuario, password})
+    });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    token = data.token;
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("chat-screen").style.display = "flex";
+    document.getElementById("error-msg").style.display = "none";
+
+    const initials = (data.nombre || data.usuario).split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+    document.getElementById("nav-avatar").textContent = initials;
+    document.getElementById("nav-avatar").style.display = "flex";
+    document.getElementById("nav-nombre").textContent = data.nombre || data.usuario;
+    document.getElementById("nav-nombre").style.display = "inline";
+    document.getElementById("nav-empresa").textContent = data.basedatos || "";
+    document.getElementById("nav-empresa").style.display = "inline";
+    document.getElementById("topbar-db").textContent = "Base: " + (data.basedatos || "");
+
+    agregarMensajeBot(`Bienvenido, <strong>${data.nombre || data.usuario}</strong>. Soy el asistente Hurpay IA.<br>Puedo ayudarte con <strong>consultas de datos</strong> (trabajadores, nóminas, contratos) y con <strong>dudas sobre el sistema</strong>. ¿En qué te puedo ayudar?`);
+  } catch {
+    document.getElementById("error-msg").style.display = "block";
+  }
+}
+
+function logout() {
+  token = "";
+  historial = [];
+  document.getElementById("chat-screen").style.display = "none";
+  document.getElementById("login-screen").style.display = "block";
+  document.getElementById("mensajes").innerHTML = "";
+  document.getElementById("usuario").value = "";
+  document.getElementById("password").value = "";
+  document.getElementById("nav-avatar").style.display = "none";
+  document.getElementById("nav-nombre").style.display = "none";
+  document.getElementById("nav-empresa").style.display = "none";
+  document.getElementById("topbar-db").textContent = "";
+  // Reset input
+  document.getElementById("input-msg").value = "";
+  onInputChange();
+}
+
+/* ── Mensajes ── */
+function agregarMensajeUsuario(texto) {
+  const div = document.createElement("div");
+  div.className = "msg usuario";
+  div.innerText = texto;
+  const btnGuardar = document.createElement("button");
+  btnGuardar.textContent = "★ Guardar prompt";
+  btnGuardar.style.cssText = "display:block;margin-top:6px;font-size:11px;padding:3px 10px;border-radius:4px;border:1px solid #90CAF9;background:#E3F2FD;color:#1565C0;cursor:pointer;";
+  btnGuardar.onclick = () => abrirModalGuardar(texto);
+  div.appendChild(btnGuardar);
+  document.getElementById("mensajes").appendChild(div);
+  scrollAbajo();
+}
+
+function agregarMensajeBot(html) {
+  const div = document.createElement("div");
+  div.className = "msg bot";
+  div.innerHTML = formatearTexto(html);
+  document.getElementById("mensajes").appendChild(div);
+  scrollAbajo();
+  return div;
+}
+
+/* ── Tabla con límite de 20 filas, opción de descarga y botón Ver PDF ── */
+function agregarTabla(datos, contenedor, tablaOrigen) {
+  if (datos.error) {
+    const err = document.createElement("div");
+    err.className = "tabla-error";
+    err.innerHTML = `Error en consulta: ${datos.error}`;
+    contenedor.appendChild(err);
+    return;
+  }
+  if (!datos.filas || datos.filas.length === 0) {
+    const vacio = document.createElement("div");
+    vacio.className = "tabla-error";
+    vacio.style.background = "#FFF8E1";
+    vacio.style.color = "#F57F17";
+    vacio.style.borderLeft = "3px solid #F57F17";
+    vacio.innerHTML = "La consulta no retornó resultados.";
+    contenedor.appendChild(vacio);
+    return;
+  }
+
+  const LIMITE_PANTALLA = 20;
+  const totalReal = datos.filas.length;
+  const filasVista = datos.filas.slice(0, LIMITE_PANTALLA);
+
+  // Detectar índice de columna que contenga "InternalId" (puede venir con alias ej: "InternalId Boleta")
+  const idxInternalId = tablaOrigen ? datos.columnas.findIndex(c => c.includes("InternalId")) : -1;
+  const mostrarPDF = tablaOrigen && idxInternalId >= 0;
+
+  const wrap = document.createElement("div");
+  wrap.className = "tabla-resultados";
+  const table = document.createElement("table");
+
+  // Encabezado
+  const thead = document.createElement("thead");
+  const trHead = document.createElement("tr");
+  datos.columnas.forEach(col => {
+    const th = document.createElement("th");
+    th.innerText = col;
+    trHead.appendChild(th);
+  });
+  if (mostrarPDF) {
+    const thPdf = document.createElement("th");
+    thPdf.innerText = "Documento PDF";
+    trHead.appendChild(thPdf);
+  }
+  thead.appendChild(trHead);
+  table.appendChild(thead);
+
+  // Filas
+  const tbody = document.createElement("tbody");
+  filasVista.forEach(fila => {
+    const tr = document.createElement("tr");
+    fila.forEach(celda => {
+      const td = document.createElement("td");
+      td.innerText = celda !== null ? celda : "—";
+      tr.appendChild(td);
+    });
+
+    if (mostrarPDF) {
+      const tdPdf = document.createElement("td");
+      const internalId = fila[idxInternalId];
+      if (internalId !== null && internalId !== undefined) {
+        const btn = document.createElement("button");
+        btn.className = "btn-ver-pdf";
+        btn.innerHTML = "📄 Ver PDF";
+        btn.onclick = async function() {
+          btn.disabled = true;
+          btn.innerHTML = `<span class="pdf-spinner"></span>Cargando...`;
+          try {
+            const res = await fetch(`/pdf/${tablaOrigen}/${internalId}`, {
+              headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error(`Error ${res.status}`);
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            window.open(url, "_blank");
+            btn.innerHTML = "📄 Ver PDF";
+          } catch(e) {
+            btn.innerHTML = "📄 Ver PDF";
+            const errDiv = document.createElement("div");
+            errDiv.className = "pdf-error";
+            errDiv.innerText = "El documento no está disponible";
+            tdPdf.appendChild(errDiv);
+            setTimeout(() => errDiv.remove(), 4000);
+          }
+          btn.disabled = false;
+        };
+        tdPdf.appendChild(btn);
+      } else {
+        tdPdf.innerText = "—";
+      }
+      tr.appendChild(tdPdf);
+    }
+
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+
+  // Info registros
+  const info = document.createElement("div");
+  info.className = "tabla-info";
+  if (totalReal > LIMITE_PANTALLA) {
+    info.innerText = `Mostrando ${LIMITE_PANTALLA} de ${totalReal} registro(s)`;
+  } else {
+    info.innerText = `${totalReal} registro(s)`;
+  }
+  wrap.appendChild(info);
+  contenedor.appendChild(wrap);
+
+  // Aviso de descarga si hay más de 20 filas
+  if (totalReal > LIMITE_PANTALLA) {
+    const aviso = document.createElement("div");
+    aviso.className = "descarga-aviso";
+    aviso.innerHTML = `
+      <span>⚠ Hay <strong>${totalReal} registros</strong> en total. ¿Deseas descargar el archivo completo?</span>
+      <div class="descarga-btns">
+        <button class="btn-descarga-si" id="btn-si-descarga">Sí, descargar</button>
+        <button class="btn-descarga-no" id="btn-no-descarga">No, gracias</button>
+      </div>
+    `;
+    contenedor.appendChild(aviso);
+
+    aviso.querySelector("#btn-si-descarga").onclick = function() {
+      descargarCSV(datos.columnas, datos.filas);
+      aviso.innerHTML = `<span>✅ Descarga iniciada con <strong>${totalReal} registros</strong>.</span>`;
+    };
+    aviso.querySelector("#btn-no-descarga").onclick = function() {
+      aviso.remove();
+    };
+  }
+}
+
+/* ── Generar y descargar CSV ── */
+function descargarCSV(columnas, filas) {
+  const escape = val => {
+    const str = val !== null && val !== undefined ? String(val) : "";
+    // Si contiene coma, salto de línea o comilla, envolver en comillas dobles
+    if (str.includes(",") || str.includes("\n") || str.includes('"')) {
+      return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+  };
+
+  const encabezado = columnas.map(escape).join(",");
+  const filasCsv   = filas.map(fila => fila.map(escape).join(","));
+  const csv = [encabezado, ...filasCsv].join("\n");
+
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" }); // BOM para Excel
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  const fecha = new Date().toISOString().slice(0, 10);
+  a.href     = url;
+  a.download = `hurpay_consulta_${fecha}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ── Formateo de texto ── */
+function formatearTexto(texto) {
+  texto = texto.replace(/```sql\n([\s\S]*?)```/g, '<pre>$1</pre>');
+  texto = texto.replace(/```([\s\S]*?)```/g, '<pre>$1</pre>');
+  texto = texto.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  texto = texto.replace(/\n/g, '<br>');
+  return texto;
+}
+
+function scrollAbajo() {
+  const m = document.getElementById("mensajes");
+  m.scrollTop = m.scrollHeight;
+}
+
+function preguntaRapida(texto) {
+  document.getElementById("input-msg").value = texto;
+  onInputChange();
+  enviar();
+}
+
+/* ── Enviar mensaje ── */
+async function enviar() {
+  const input = document.getElementById("input-msg");
+  const mensaje = input.value.trim();
+  if (!mensaje) return;
+
+  // Validar límite de caracteres
+  if (mensaje.length > limiteActual) {
+    document.getElementById("msg-limite-error").style.display = "block";
+    return;
+  }
+
+  input.value = "";
+  input.style.height = "auto";
+  onInputChange();
+
+  const btnEnviar = document.getElementById("btn-enviar");
+  btnEnviar.disabled = true;
+
+  agregarMensajeUsuario(mensaje);
+
+  const cargando = document.createElement("div");
+  cargando.className = "msg bot cargando";
+  cargando.innerHTML = "Consultando...";
+  document.getElementById("mensajes").appendChild(cargando);
+  scrollAbajo();
+
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "Authorization": `Bearer ${token}`},
+      body: JSON.stringify({mensaje, historial})
+    });
+    const data = await res.json();
+    cargando.remove();
+
+    const msgBot = document.createElement("div");
+    msgBot.className = "msg bot";
+    msgBot.innerHTML = formatearTexto(data.respuesta);
+    document.getElementById("mensajes").appendChild(msgBot);
+
+    if (data.datos) {
+      agregarTabla(data.datos, msgBot, data.tabla_origen || null);
+    }
+
+    scrollAbajo();
+
+    historial.push({rol: "user", contenido: mensaje});
+    historial.push({rol: "assistant", contenido: data.respuesta});
+    if (historial.length > 12) historial = historial.slice(-12);
+
+  } catch {
+    cargando.innerHTML = "Error al conectar. Intenta nuevamente.";
+    cargando.classList.remove("cargando");
+  }
+
+  btnEnviar.disabled = false;
+  input.focus();
+}
+
+/* ── Prompts Favoritos ────────────────────────────────── */
+let promptParaGuardar = '';
+
+async function abrirPanelPrompts() {
+  document.getElementById('panel-prompts').classList.add('abierto');
+  await cargarCategoriasFiltro();
+  await buscarPrompts();
+}
+
+function cerrarPanelPrompts() {
+  document.getElementById('panel-prompts').classList.remove('abierto');
+}
+
+async function cargarCategoriasFiltro() {
+  try {
+    const res = await fetch('/prompts/categorias', { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    const sel = document.getElementById('filtro-categoria');
+    sel.innerHTML = '<option value="">Todas las categorias</option>';
+    (data.categorias || []).forEach(c => {
+      sel.innerHTML += '<option value="' + c.id + '">' + c.nombre_categoria + '</option>';
+    });
+  } catch(e) {}
+}
+
+async function buscarPrompts() {
+  const catId = document.getElementById('filtro-categoria').value;
+  const nombre = document.getElementById('filtro-nombre').value.trim();
+  let url = '/prompts?';
+  if (catId) url += 'categoria_id=' + catId + '&';
+  if (nombre) url += 'nombre=' + encodeURIComponent(nombre);
+  try {
+    const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    const lista = document.getElementById('lista-prompts');
+    if (data.prompts.length === 0) {
+      lista.innerHTML = '<p style="color:#888;font-size:13px;text-align:center;margin-top:20px">No hay prompts guardados.</p>';
+      return;
+    }
+    lista.innerHTML = data.prompts.map(p => '<div class="prompt-item">' +
+      '<div class="prompt-item-nombre">' + p.nombre + '</div>' +
+      '<div class="prompt-item-cat">' + p.categoria + '</div>' +
+      '<div class="prompt-item-acciones">' +
+        '<button class="btn-usar-prompt" data-prompt-id="' + p.id + '">Usar</button>' +
+        '<button class="btn-eliminar-prompt" onclick="eliminarPrompt(' + p.id + ')">Eliminar</button>' +
+      '</div>' +
+    '</div>').join('');
+  // Asignar eventos click a los botones Usar
+  lista.querySelectorAll('.btn-usar-prompt').forEach(btn => {
+    const id = parseInt(btn.dataset.promptId);
+    const item = data.prompts.find(p => p.id === id);
+    if (item) btn.onclick = () => usarPrompt(item.prompt);
+  });
+  } catch(e) {}
+}
+
+function usarPrompt(texto) {
+  document.getElementById('input-msg').value = texto;
+  onInputChange();
+  cerrarPanelPrompts();
+  document.getElementById('input-msg').focus();
+}
+
+async function eliminarPrompt(id) {
+  try {
+    await fetch('/prompts/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+    await buscarPrompts();
+  } catch(e) {}
+}
+
+async function abrirModalGuardar(textoPrompt) {
+  promptParaGuardar = textoPrompt;
+  document.getElementById('guardar-texto').value = textoPrompt;
+  document.getElementById('guardar-nombre').value = '';
+  try {
+    const res = await fetch('/prompts/categorias', { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    const sel = document.getElementById('guardar-categoria');
+    sel.innerHTML = '<option value="">Selecciona categoria...</option>';
+    (data.categorias || []).forEach(c => {
+      sel.innerHTML += '<option value="' + c.id + '">' + c.nombre_categoria + '</option>';
+    });
+  } catch(e) {}
+  document.getElementById('modal-guardar-prompt').classList.add('abierto');
+}
+
+function cerrarModalGuardar() {
+  document.getElementById('modal-guardar-prompt').classList.remove('abierto');
+}
+
+async function confirmarGuardarPrompt() {
+  const nombre = document.getElementById('guardar-nombre').value.trim();
+  const categoriaId = parseInt(document.getElementById('guardar-categoria').value);
+  const prompt = document.getElementById('guardar-texto').value.trim();
+  if (nombre === '' || categoriaId === 0 || prompt === '') {
+    alert('Completa todos los campos.');
+    return;
+  }
+  try {
+    const res = await fetch('/prompts', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ categoria_id: categoriaId, nombre, prompt })
+    });
+    if (res.ok) {
+      cerrarModalGuardar();
+      alert('Prompt guardado correctamente.');
+    }
+  } catch(e) {}
+}
+
+</script>
+</body>
+</html>
